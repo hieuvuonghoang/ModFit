@@ -19,59 +19,66 @@ namespace ModFit
         static void Main(string[] args)
         {
 
-            var pathFile = "START_28042025180556-SPEED_7-GPX_01.json";
-            var jogMockRecords = ReadJogMockRecords(pathFile);
+            var pathFileFit = "2025-04-13-05-19-48.fit";
+            var pathFileCsv = ExportFitToCsv(pathFileFit);
+            Console.WriteLine("Path CSV File: {0}", pathFileFit);
 
-            var startTimeGmtPlus7 = new System.DateTime(2025, 04, 28, 04, 30, 31);
-            var gmtPlus7 = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
-            var startTimeUtc = TimeZoneInfo.ConvertTimeToUtc(startTimeGmtPlus7, gmtPlus7);
+            #region 
+            //var pathFile = "START_28042025180556-SPEED_7-GPX_01.json";
+            //var jogMockRecords = ReadJogMockRecords(pathFile);
 
-            var records = new List<Record>();
-            var firstTimeInJogMockRecord = jogMockRecords.FirstOrDefault().timestamp;
-            var random = new Random();
-            byte[] randomByte = new byte[1];
-            foreach (var jogMockRecord in jogMockRecords)
-            {
+            //var startTimeGmtPlus7 = new System.DateTime(2025, 04, 28, 04, 30, 31);
+            //var gmtPlus7 = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            //var startTimeUtc = TimeZoneInfo.ConvertTimeToUtc(startTimeGmtPlus7, gmtPlus7);
 
-                // Convert to semicircles
-                var latitudeSemicircles = DegreesToSemicircles(jogMockRecord.latitude);
-                var longitudeSemicircles = DegreesToSemicircles(jogMockRecord.longitude);
-                // 
-                var secondsDouble = jogMockRecord.timestamp.Subtract(jogMockRecords.FirstOrDefault().timestamp).TotalSeconds;
-                var secondsInt = (int)secondsDouble;
-                //
-                var timeStamp = new Dynastream.Fit.DateTime(startTimeUtc.AddSeconds(secondsDouble)).GetTimeStamp();
-                //
-                var heartRate = (byte)random.Next(115, 115);
-                var cadence = (byte)random.Next(60, 60);
-                var record = new Record()
-                {
-                    Lat = latitudeSemicircles,
-                    Lng = longitudeSemicircles,
-                    Distance = jogMockRecord.distance * 1000,
-                    Seconds = secondsInt,
-                    Timestamp = timeStamp,
-                    HeartRate = heartRate,
-                    Cadence = cadence,
-                    EnhancedSpeed = jogMockRecord.speed,
-                    Speed = jogMockRecord.speed,
-                    Altitude = jogMockRecord.altitude,
-                    EnhancedAltitude = jogMockRecord.altitude,
-                    FractionalCadence = 0
-                };
-                records.Add(record);
-            }
+            //var records = new List<Record>();
+            //var firstTimeInJogMockRecord = jogMockRecords.FirstOrDefault().timestamp;
+            //var random = new Random();
+            //byte[] randomByte = new byte[1];
+            //foreach (var jogMockRecord in jogMockRecords)
+            //{
 
-            var activity = new Activity()
-            {
-                Records = records
-            };
+            //    // Convert to semicircles
+            //    var latitudeSemicircles = DegreesToSemicircles(jogMockRecord.latitude);
+            //    var longitudeSemicircles = DegreesToSemicircles(jogMockRecord.longitude);
+            //    // 
+            //    var secondsDouble = jogMockRecord.timestamp.Subtract(jogMockRecords.FirstOrDefault().timestamp).TotalSeconds;
+            //    var secondsInt = (int)secondsDouble;
+            //    //
+            //    var timeStamp = new Dynastream.Fit.DateTime(startTimeUtc.AddSeconds(secondsDouble)).GetTimeStamp();
+            //    //
+            //    var heartRate = (byte)random.Next(115, 115);
+            //    var cadence = (byte)random.Next(60, 60);
+            //    var record = new Record()
+            //    {
+            //        Lat = latitudeSemicircles,
+            //        Lng = longitudeSemicircles,
+            //        Distance = jogMockRecord.distance * 1000,
+            //        Seconds = secondsInt,
+            //        Timestamp = timeStamp,
+            //        HeartRate = heartRate,
+            //        Cadence = cadence,
+            //        EnhancedSpeed = jogMockRecord.speed,
+            //        Speed = jogMockRecord.speed,
+            //        Altitude = jogMockRecord.altitude,
+            //        EnhancedAltitude = jogMockRecord.altitude,
+            //        FractionalCadence = 0
+            //    };
+            //    records.Add(record);
+            //}
 
-            ushort manufacturerId = Manufacturer.Garmin;
-            ushort productId = 4033;
-            uint serialNumber = 3494402588; // Serial number of the device that created the file
+            //var activity = new Activity()
+            //{
+            //    Records = records
+            //};
 
-            CreateActivityFile(activity, manufacturerId, productId, serialNumber);
+            //ushort manufacturerId = Manufacturer.Garmin;
+            //ushort productId = 4033;
+            //uint serialNumber = 3494402588; // Serial number of the device that created the file
+
+            //CreateActivityFile(activity, manufacturerId, productId, serialNumber);
+
+            #endregion
 
             #region 
             //Console.WriteLine("FIT Decode Example Application");
@@ -189,14 +196,15 @@ namespace ModFit
             return dataTable;
         }
 
-        public static Activity Decode(string pathFile)
+        public static string ExportFitToCsv(string pathFile)
         {
+            var ret = "";
             // Attempt to open the input file
-            FileStream fileStream = new FileStream(pathFile, FileMode.Open);
+            var fileStream = new FileStream(pathFile, FileMode.Open);
             Console.WriteLine($"Opening {pathFile}");
 
             // Create our FIT Decoder
-            FitDecoder fitDecoder = new FitDecoder(fileStream, Dynastream.Fit.File.Activity);
+            var fitDecoder = new FitDecoder(fileStream, Dynastream.Fit.File.Activity);
 
             // Decode the FIT file
             try
@@ -227,28 +235,28 @@ namespace ModFit
             Console.WriteLine($"The timezone offset for this activity file is {timezoneOffset?.TotalHours ?? 0} hours.");
 
             // Create the Activity Parser and group the messages into individual sessions.
-            ActivityParser activityParser = new ActivityParser(fitDecoder.FitMessages);
+            var activityParser = new ActivityParser(fitDecoder.FitMessages);
             var sessions = activityParser.ParseSessions();
 
             // Export a CSV file for each Activity Session
-            Activity activity = new Activity();
-            foreach (SessionMessages session in sessions)
+            //var activity = new Activity();
+            foreach (var session in sessions)
             {
                 if (session.Records.Count > 0)
                 {
                     var recordsCSV = Export.RecordsToCSV(session, fitDecoder.RecordFieldNames, fitDecoder.RecordDeveloperFieldNames);
-                    var recordsPath = Path.Combine(Path.GetDirectoryName(pathFile), $"{Path.GetFileNameWithoutExtension(pathFile)}_{session.Session.GetStartTime().GetDateTime().ToString("yyyyMMddHHmmss")}_{session.Session.GetSport()}_Records.csv");
-                    using (StreamWriter outputFile = new StreamWriter(recordsPath))
+                    ret = Path.Combine(Path.GetDirectoryName(pathFile), $"{Path.GetFileNameWithoutExtension(pathFile)}_{session.Session.GetStartTime().GetDateTime().ToString("yyyyMMddHHmmss")}_{session.Session.GetSport()}_Records.csv");
+                    using (var outputFile = new StreamWriter(ret))
                     {
                         outputFile.WriteLine(recordsCSV);
                     }
-
-                    var dataTable = ReadCsvToDataTable(recordsPath);
-                    var records = ConvertDataTableToRecords(dataTable);
-                    activity.Records = records;
+                    //var dataTable = ReadCsvToDataTable(recordsPath);
+                    //var records = ConvertDataTableToRecords(dataTable);
+                    //activity.Records = records;
                 }
             }
-            return activity;
+            //return activity;
+            return ret;
         }
 
         static public List<Mesg> CreateTimeBasedActivity(Activity activity, Dynastream.Fit.DateTime startTime)
